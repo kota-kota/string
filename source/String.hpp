@@ -5,6 +5,7 @@
 
 namespace my {
 
+	class String;
 	class WString;
 
 	class String final : public std::string {
@@ -45,9 +46,12 @@ namespace my {
 		//文字コード変換(UTF8->SJIS)
 		String convert_UTF8_to_SJIS();
 
+		//文字コード変換(SJIS->UTF16BE)
+		WString convert_SJIS_to_UTF16BE();
+
 	public:
-		//ログ出力
-		void printLog();
+		//結果
+		void result(const String& current);
 	};
 }
 
@@ -80,8 +84,8 @@ namespace my {
 		//文字コード変換
 
 
-		//ログ出力
-		void printLog();
+		//結果
+		void result(const WString& current);
 	};
 }
 

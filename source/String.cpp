@@ -62,6 +62,7 @@ namespace my {
 		WString ret;
 		switch (this->m_charCode) {
 		case CharCode::UTF8:	ret = this->convert_UTF8_to_UTF16BE();		break;
+		case CharCode::SJIS:	ret = this->convert_SJIS_to_UTF16BE();		break;
 		default:	break;
 		};
 		return ret;
@@ -153,19 +154,34 @@ namespace my {
 				//0x2000がテーブルの0番目となる
 				s = utf16be_to_sjis_2000_9FFF[u - 0x2000];
 			}
-			else {
+			else if ((u >= 0xFF00) && (u <= 0xFFFF)) {
 				//UTF16BE->SJIS変換テーブルを使用して変換
 				//0xFF00がテーブルの0番目となる
 				s = utf16be_to_sjis_FF00_FFFF[u - 0xFF00];
 			}
+			else {
+				//変換テーブルにない
+				//空白文字とする
+				s = 0x8140;
+			}
+			//変換テーブルからヒットしなかった場合は空白文字とする
+			if (s == 0x0000) { s = 0x8140; }
+
 			readSize += 1;
 
-			//SJISの1バイト目
-			std::uint8_t s1 = static_cast<std::uint8_t>((s & 0xFF00) >> 8);
-			sjis.push_back(static_cast<char>(s1));
-			//SJISの2バイト目
-			std::uint8_t s2 = static_cast<std::uint8_t>(s & 0x00FF);
-			sjis.push_back(static_cast<char>(s2));
+			if (s <= 0x007F) {
+				//SJISの1バイト目
+				std::uint8_t s1 = static_cast<std::uint8_t>(s & 0x00FF);
+				sjis.push_back(static_cast<char>(s1));
+			}
+			else {
+				//SJISの1バイト目
+				std::uint8_t s1 = static_cast<std::uint8_t>((s & 0xFF00) >> 8);
+				sjis.push_back(static_cast<char>(s1));
+				//SJISの2バイト目
+				std::uint8_t s2 = static_cast<std::uint8_t>(s & 0x00FF);
+				sjis.push_back(static_cast<char>(s2));
+			}
 		}
 
 		//変換後(SJIS)の文字コードを設定
@@ -173,10 +189,75 @@ namespace my {
 		return sjis;
 	}
 
-	//ログ出力
-	void String::printLog()
+	//文字コード変換(SJIS->UTF16BE)
+	WString String::convert_SJIS_to_UTF16BE()
 	{
+		WString utf16be;
+
+		//変換前(SJIS)の文字情報1バイト文字の並びの数を取得
+		const char* sjis = this->c_str();
+		const std::size_t sjisSize = this->size();
+
+		//変換
+		std::int32_t readSize = 0;
+		while (readSize < sjisSize) {
+			std::uint16_t s = 0x0000;
+			std::uint16_t u = 0x0000;
+
+			//SJIS1バイト目
+			const std::uint8_t s1 = static_cast<std::uint8_t>(sjis[readSize]);
+			if ((s1 >= 0x81) && (s1 <= 0x9F)) {
+				//SJIS全角文字の1バイト目なら2バイト文字
+
+				//SJIS2バイト目を取得してSJIS全角文字コードに変換
+				const std::uint8_t s2 = static_cast<std::uint8_t>(sjis[readSize + 1]);
+				s = (static_cast<std::uint16_t>(s1) << 8) | static_cast<std::uint16_t>(s2);
+
+				//SJIS->UTF16LE変換テーブルを使用して変換
+				//0x8100がテーブルの0番目となる
+				u = sjis_to_utf16be_8100_9FFF[s - 0x8100];
+
+				readSize += 2;
+			}
+			else if ((s1 >= 0xE0) && (s1 <= 0xFC)) {
+				//SJIS全角文字の1バイト目なら2バイト文字
+
+				//SJIS2バイト目を取得してSJIS全角文字コードに変換
+				const std::uint8_t s2 = static_cast<std::uint8_t>(sjis[readSize + 1]);
+				s = (static_cast<std::uint16_t>(s1) << 8) | static_cast<std::uint16_t>(s2);
+
+				//SJIS->UTF16LE変換テーブルを使用して変換
+				//0xE000がテーブルの0番目となる
+				u = sjis_to_utf16be_E000_FCFF[s - 0xE000];
+
+				readSize += 2;
+			}
+			else {
+				//SJIS半角文字なら1バイト文字
+
+				//SJIS1バイト目がSJIS半角文字コード
+				s = s1;
+
+				//SJIS->UTF16LE変換テーブルを使用して変換
+				u = sjis_to_utf16be_0000_00FF[s];
+
+				readSize += 1;
+			}
+
+			utf16be.push_back(static_cast<char16_t>(u));
+		}
+
+		//変換後(UTF16)の文字コードを設定
+		utf16be.setCharCode(my::WString::CharCode::UTF16BE);
+		return utf16be;
+	}
+
+	//ログ出力
+	void String::result(const String& current)
+	{
+		bool res = (*this == current) ? true : false;
 		std::string out;
+		out = res ? "[OK] " : "[NG] ";
 		for (std::int32_t i = 0; i < this->size(); i++) {
 			std::uint8_t t = static_cast<std::uint8_t>(this->c_str()[i]);
 			std::stringstream ss;
@@ -217,9 +298,11 @@ namespace my {
 	}
 
 	//ログ出力
-	void WString::printLog()
+	void WString::result(const WString& current)
 	{
+		bool res = (*this == current) ? true : false;
 		std::string out;
+		out = res ? "[OK] " : "[NG] ";
 		for (std::int32_t i = 0; i < this->size(); i++) {
 			std::uint16_t t = static_cast<std::uint16_t>(this->c_str()[i]);
 			std::stringstream ss;
