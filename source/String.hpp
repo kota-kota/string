@@ -33,6 +33,9 @@ namespace my {
 		//文字コード設定
 		void setCharCode(const CharCode code);
 
+		//UTF8へ文字コード変換
+		String convertUTF8();
+
 		//UTF16BEへ文字コード変換
 		WString convertUTF16BE();
 
@@ -48,6 +51,9 @@ namespace my {
 
 		//文字コード変換(SJIS->UTF16BE)
 		WString convert_SJIS_to_UTF16BE();
+
+		//文字コード変換(SJIS->UTF8)
+		String convert_SJIS_to_UTF8();
 
 	public:
 		//結果
