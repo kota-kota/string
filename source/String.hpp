@@ -1,4 +1,13 @@
-﻿#ifndef INCLUDED_STRING_HPP
+﻿/**
+ * @file String.hpp
+ * @author kota-kota
+ * @brief 文字列を扱うクラスの定義
+ * @version 0.1
+ * @date 2020-05-01
+ * 
+ * @copyright Copyright (c) 2020
+ */
+#ifndef INCLUDED_STRING_HPP
 #define INCLUDED_STRING_HPP
 
 #include <string>
@@ -8,89 +17,94 @@ namespace my {
 	class String;
 	class WString;
 
+	/**
+	 * @class String
+	 * @brief マルチバイト文字の文字列を扱うクラス
+	 */
 	class String final : public std::string {
 
 	public:
-		//文字コード
+		/**
+		 * @enum CharCode
+		 * @brief 文字コード定義
+		 */
 		enum class CharCode {
-			UTF8,
-			SJIS,
+			UTF8,	//!< UTF-8
+			SJIS,	//!< Shift-JIS
 		};
 
 	private:
-		CharCode	m_charCode;		//文字コード
+		CharCode	m_charCode;		//!< 文字コード
 
 	public:
-		//コンストラクタ
+		//! デフォルトコンストラクタ
 		String();
+		//! コンストラクタ
 		String(const char* str, const CharCode code = CharCode::UTF8);
+		//! コピーコンストラクタ
 		String(const String& str);
 
-		//代入演算子
+		//! コピー代入演算子のオーバーロード
 		String& operator=(const char* str);
+		//! コピー代入演算子のオーバーロード
 		String& operator=(const String& str);
 
-		//文字コード設定
+		//! 文字コードを設定する
 		void setCharCode(const CharCode code);
 
-		//UTF8へ文字コード変換
+		//! 文字列の文字コードをUTF8に変換する
 		String convertUTF8();
 
-		//UTF16BEへ文字コード変換
+		//! 文字列の文字コードをUTF16BEに変換する
 		WString convertUTF16BE();
 
-		//SJISへ文字コード変換
+		//! 文字列の文字コードをSJISに変換する
 		String convertSJIS();
 
-	private:
-		//文字コード変換(UTF8->UTF16BE)
-		WString convert_UTF8_to_UTF16BE();
-
-		//文字コード変換(UTF8->SJIS)
-		String convert_UTF8_to_SJIS();
-
-		//文字コード変換(SJIS->UTF16BE)
-		WString convert_SJIS_to_UTF16BE();
-
-		//文字コード変換(SJIS->UTF8)
-		String convert_SJIS_to_UTF8();
-
 	public:
-		//結果
+		//! 正解データを入力して、結果を出力する
 		void result(const String& current);
 	};
 }
 
 namespace my {
 
+	/**
+	 * @class WString
+	 * @brief ワイド文字の文字列を扱うクラス
+	 */
 	class WString final : public std::wstring {
 
 	public:
-		//文字コード
+		/**
+		 * @enum CharCode
+		 * @brief 文字コード定義
+		 */
 		enum class CharCode {
-			UTF16BE,
+			UTF16BE,	//!< UTF-16(BigEndian)
 		};
 
 	private:
-		CharCode	m_charCode;		//文字コード
+		CharCode	m_charCode;		//!< 文字コード
 
 	public:
-		//コンストラクタ
+		//! デフォルトコンストラクタ
 		WString();
+		//! コンストラクタ
 		WString(const wchar_t* str, const CharCode code = CharCode::UTF16BE);
+		//! コピーコンストラクタ
 		WString(const WString& str);
 
-		//代入演算子
+		//! コピー代入演算子のオーバーロード
 		WString& operator=(const wchar_t* str);
+		//! コピー代入演算子のオーバーロード
 		WString& operator=(const WString& str);
 
-		//文字コード設定
+		//! 文字コードを設定する
 		void setCharCode(const CharCode code);
 
-		//文字コード変換
-
-
-		//結果
+	public:
+		//! 正解データを入力して、結果を出力する
 		void result(const WString& current);
 	};
 }

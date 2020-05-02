@@ -1,12 +1,34 @@
-﻿#include "String.hpp"
+﻿/**
+ * @file String.cpp
+ * @author kota-kota
+ * @brief 文字列を扱うクラスの実装
+ * @version 0.1
+ * @date 2020-05-01
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+#include "String.hpp"
 #include "String_sjis_to_utf16be.hpp"
 #include "String_utf16be_to_sjis.hpp"
 #include <iostream>
 #include <sstream>
 
-
-// 変換テーブル
 namespace {
+	/**
+	 * 
+	 * @brief 指定されたSJISコードからUTF16BEコードを取得する
+	 * 
+	 * @param [in] sjis SJISコード
+	 * @retval 0x0000 取得失敗
+	 * @retval >0x0000 取得成功(UTF16BEコード)
+	 * 
+	 * @par 詳細
+	 *      SJISコードを入力として、SJIS->UTF16BE変換テーブル(sjis_to_utf16be[])から検索する。
+	 *      ヒットした場合、UTF16BEコードを返す。ヒットしなかった場合、0x0000を返す。
+	 * @todo
+	 *      線形探索になっているため、二分木探索をする
+	 */
 	std::uint16_t searchTable_SJIS_to_UTF16BE(const std::uint16_t sjis)
 	{
 		//TODO: binary search
@@ -21,6 +43,19 @@ namespace {
 		return utf16be;
 	}
 
+	/**
+	 * @brief 指定されたUTF16BEコードからSJISコードを取得する
+	 * 
+	 * @param [in] utf16be UTF16BEコード
+	 * @retval 0x0000 取得失敗
+	 * @retval >0x0000 取得成功(SJISコード)
+	 * 
+	 * @par 詳細
+	 *      UTF16BEコードを入力として、UTF16BE->SJIS変換テーブル(utf16be_to_sjis[])から検索する。
+	 *      ヒットした場合、SJISコードを返す。ヒットしなかった場合、0x0000を返す。
+	 * @todo
+	 *      線形探索になっているため、二分木探索をする
+	 */
 	std::uint16_t searchTable_UTF16BE_to_SJIS(const std::uint16_t utf16be)
 	{
 		//TODO: binary search
@@ -36,9 +71,19 @@ namespace {
 	}
 }
 
-// デバッグ
 namespace {
-	const char* enumToString(my::String::CharCode code)
+	/**
+	 * @brief 文字コード列挙体定義を文字列に変換する
+	 * 
+	 * @param [in] code 文字コード
+	 * @retval "UTF8" my::String::CharCode::UTF8
+	 * @retval "SJIS" my::String::CharCode::SJIS
+	 * @retval "NONE" 上記以外
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	const char* enumToString(const my::String::CharCode code)
 	{
 		char* ret = "NONE";
 		switch(code) {
@@ -49,7 +94,17 @@ namespace {
 		return ret;
 	}
 
-	const char* enumToString(my::WString::CharCode code)
+	/**
+	 * @brief 文字コード列挙体定義を文字列に変換する
+	 * 
+	 * @param [in] code 文字コード
+	 * @retval "UTF16BE" my::WString::CharCode::UTF16BE
+	 * @retval "NONE" 上記以外
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	const char* enumToString(const my::WString::CharCode code)
 	{
 		char* ret = "NONE";
 		switch (code) {
@@ -60,80 +115,23 @@ namespace {
 	}
 }
 
-
-namespace my {
-
-	//コンストラクタ
-	String::String() : std::string(), m_charCode(CharCode::UTF8) {}
-	String::String(const char* str, const CharCode code) : std::string(str), m_charCode(code) {}
-	String::String(const String& str) : std::string(str), m_charCode(str.m_charCode) {}
-
-	//代入演算子
-	String& String::operator=(const char* str)
+namespace {
+	/**
+	 * @brief UTF8からUTF16Eへ文字コードを変換する
+	 * 
+	 * @param [in] utf8 文字コードがUTF8の文字列を持つStringインスタンス
+	 * @return WString 文字コードがUTF16BEの文字列を持つWStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	my::WString convert_UTF8_to_UTF16BE(const my::String& utf8)
 	{
-		std::string::operator=(str);
-		this->m_charCode = CharCode::UTF8;
-		return *this;
-	}
-	String& String::operator=(const String& str)
-	{
-		std::string::operator=(str);
-		this->m_charCode = str.m_charCode;
-		return *this;
-	}
-
-	//文字コード設定
-	void String::setCharCode(const CharCode code)
-	{
-		this->m_charCode = code;
-	}
-
-	//UTF8へ文字コード変換
-	String String::convertUTF8()
-	{
-		String ret;
-		switch (this->m_charCode) {
-		case CharCode::SJIS:	ret = this->convert_SJIS_to_UTF8();		break;
-		default:	break;
-		};
-		return ret;
-	}
-
-	//UTF16BEへ文字コード変換
-	WString String::convertUTF16BE()
-	{
-		WString ret;
-		switch (this->m_charCode) {
-		case CharCode::UTF8:	ret = this->convert_UTF8_to_UTF16BE();		break;
-		case CharCode::SJIS:	ret = this->convert_SJIS_to_UTF16BE();		break;
-		default:	break;
-		};
-		return ret;
-	}
-
-	//SJISへ文字コード変換
-	String String::convertSJIS()
-	{
-		String ret;
-		switch (this->m_charCode) {
-		case CharCode::UTF8:	ret = this->convert_UTF8_to_SJIS();			break;
-		default:	break;
-		};
-		return ret;
-	}
-
-	//文字コード変換(UTF8->UTF16BE)
-	WString String::convert_UTF8_to_UTF16BE()
-	{
-		WString utf16be;
-
-		//変換前(UTF8)の文字情報1バイト文字の並びの数を取得
-		const char* utf8 = this->c_str();
-		const std::size_t utf8Size = this->size();
+		my::WString utf16be;
 
 		//変換
 		std::size_t readSize = 0;
-		while (readSize < utf8Size) {
+		while (readSize < utf8.size()) {
 			const std::uint8_t c1 = static_cast<std::uint8_t>(utf8[readSize]);
 
 			std::uint16_t u = 0x0000;
@@ -170,20 +168,25 @@ namespace my {
 		return utf16be;
 	}
 
-	//文字コード変換(UTF8->SJIS)
-	String String::convert_UTF8_to_SJIS()
+	/**
+	 * @brief UTF8からSJISへ文字コードを変換する
+	 * 
+	 * @param [in] utf8 文字コードがUTF8の文字列を持つStringインスタンス
+	 * @return String 文字コードがSJISの文字列を持つWStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	my::String convert_UTF8_to_SJIS(const my::String& utf8)
 	{
-		String sjis;
+		my::String sjis;
 
 		//まずはUTF16BEに変換
-		WString utf16be = this->convert_UTF8_to_UTF16BE();
-
-		//変換前(UTF16BE)の1バイト文字の並びの数を取得
-		const std::size_t utf16beSize = utf16be.size();
+		my::WString utf16be = convert_UTF8_to_UTF16BE(utf8);
 
 		//UTF16BE->SJIS変換
 		std::size_t readSize = 0;
-		while (readSize < utf16beSize) {
+		while (readSize < utf16be.size()) {
 			const std::uint16_t u = static_cast<std::uint16_t>(utf16be.c_str()[readSize]);
 
 			//UTF16BE->SJIS変換テーブルから検索する
@@ -215,18 +218,22 @@ namespace my {
 		return sjis;
 	}
 
-	//文字コード変換(SJIS->UTF16BE)
-	WString String::convert_SJIS_to_UTF16BE()
+	/**
+	 * @brief SJISからUTF16BEへ文字コードを変換する
+	 * 
+	 * @param [in] sjis 文字コードがSJISの文字列を持つStringインスタンス
+	 * @return WString 文字コードがUTF16BEの文字列を持つWStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	my::WString convert_SJIS_to_UTF16BE(const my::String& sjis)
 	{
-		WString utf16be;
-
-		//変換前(SJIS)の文字情報1バイト文字の並びの数を取得
-		const char* sjis = this->c_str();
-		const std::size_t sjisSize = this->size();
+		my::WString utf16be;
 
 		//変換
 		std::int32_t readSize = 0;
-		while (readSize < sjisSize) {
+		while (readSize < sjis.size()) {
 			std::uint16_t s = 0x0000;
 
 			//SJIS1バイト目
@@ -264,19 +271,24 @@ namespace my {
 		return utf16be;
 	}
 
-	//文字コード変換(SJIS->UTF8)
-	String String::convert_SJIS_to_UTF8()
+	/**
+	 * @brief SJISからUTF8へ文字コードを変換する
+	 * 
+	 * @param [in] sjis 文字コードがSJISの文字列を持つStringインスタンス
+	 * @return String 文字コードがUTF8の文字列を持つWStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	my::String convert_SJIS_to_UTF8(const my::String& sjis)
 	{
-		String utf8;
+		my::String utf8;
 
 		//まずはUTF16BEに変換
-		WString utf16be = this->convert_SJIS_to_UTF16BE();
-
-		//変換前(UTF16BE)の1バイト文字の並びの数を取得
-		const std::size_t utf16beSize = utf16be.size();
+		my::WString utf16be = convert_SJIS_to_UTF16BE(sjis);
 
 		//UTF16BE->UTF8変換
-		for (std::int32_t i = 0; i < utf16beSize; i++) {
+		for (std::int32_t i = 0; i < utf16be.size(); i++) {
 			const std::uint16_t u = static_cast<std::uint16_t>(utf16be[i]);
 
 			//1バイト毎に分割
@@ -310,8 +322,150 @@ namespace my {
 		utf8.setCharCode(my::String::CharCode::UTF8);
 		return utf8;
 	}
+}
 
-	//ログ出力
+
+namespace my {
+
+	/**
+	 * @brief デフォルトコンストラクタ
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	String::String() : std::string(), m_charCode(CharCode::UTF8) {}
+	/**
+	 * @brief コンストラクタ
+	 * 
+	 * @param [in] str 文字列ポインタ
+	 * @param [in] code 文字コード
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	String::String(const char* str, const CharCode code) : std::string(str), m_charCode(code) {}
+
+	/**
+	 * @brief コピーコンストラクタ
+	 * 
+	 * @param [in] str コピー元のStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	String::String(const String& str) : std::string(str), m_charCode(str.m_charCode) {}
+
+	/**
+	 * @brief コピー代入演算子のオーバーロード
+	 * 
+	 * @param [in] str コピー元の文字列ポインタ
+	 * @return String& コピー先のStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	String& String::operator=(const char* str)
+	{
+		std::string::operator=(str);
+		this->m_charCode = CharCode::UTF8;
+		return *this;
+	}
+	/**
+	 * @brief コピー代入演算子のオーバーロード
+	 * 
+	 * @param [in] str コピー元のStringインスタンス
+	 * @return String& コピー先のStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	String& String::operator=(const String& str)
+	{
+		std::string::operator=(str);
+		this->m_charCode = str.m_charCode;
+		return *this;
+	}
+
+	/**
+	 * @brief 文字コードを設定する
+	 * 
+	 * @param [in] code 文字コード
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	void String::setCharCode(const CharCode code)
+	{
+		this->m_charCode = code;
+	}
+
+	/**
+	 * @brief 文字列の文字コードをUTF8に変換する
+	 * 
+	 * @return String 文字コードがUTF8の文字列を持つStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	String String::convertUTF8()
+	{
+		String ret;
+		switch (this->m_charCode) {
+		case CharCode::SJIS:	ret = convert_SJIS_to_UTF8(*this);		break;
+		default:	break;
+		};
+		return ret;
+	}
+
+	/**
+	 * @brief 文字列の文字コードをUTF16BEに変換する
+	 * 
+	 * @return String 文字コードがUTF16BEの文字列を持つStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	WString String::convertUTF16BE()
+	{
+		WString ret;
+		switch (this->m_charCode) {
+		case CharCode::UTF8:	ret = convert_UTF8_to_UTF16BE(*this);		break;
+		case CharCode::SJIS:	ret = convert_SJIS_to_UTF16BE(*this);		break;
+		default:	break;
+		};
+		return ret;
+	}
+
+	/**
+	 * @brief 文字列の文字コードをSJISに変換する
+	 * 
+	 * @return String 文字コードがSJISの文字列を持つStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
+	String String::convertSJIS()
+	{
+		String ret;
+		switch (this->m_charCode) {
+		case CharCode::UTF8:	ret = convert_UTF8_to_SJIS(*this);			break;
+		default:	break;
+		};
+		return ret;
+	}
+
+	/**
+	 * @brief 正解データを入力して、結果を出力する
+	 * 
+	 * @return String 正解文字列のStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      入力された正解文字列と比較して、一致するか判定します。
+	 *      一致していれば"[OK]"の文字列を出力します。
+	 *      不一致であれば"[NG]"の文字列を出力します。
+	 *      その後、結果に関わらず、自身の文字列を出力します。
+	 *      出力先は標準出力になります。
+	 */
 	void String::result(const String& current)
 	{
 		bool res = (*this == current) ? true : false;
@@ -326,23 +480,62 @@ namespace my {
 		out = out + "0x00 (" + enumToString(this->m_charCode) + ")";
 		std::cout << out << std::endl;
 	}
-
 }
 
 namespace my {
 
-	//コンストラクタ
+	/**
+	 * @brief デフォルトコンストラクタ
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
 	WString::WString() : std::wstring(), m_charCode(CharCode::UTF16BE) {}
+	/**
+	 * @brief コンストラクタ
+	 * 
+	 * @param [in] str 文字列ポインタ
+	 * @param [in] code 文字コード
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
 	WString::WString(const wchar_t* str, const CharCode code) : std::wstring(str), m_charCode(code) {}
+
+	/**
+	 * @brief コピーコンストラクタ
+	 * 
+	 * @param [in] str コピー元のStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
 	WString::WString(const WString& str) : std::wstring(str), m_charCode(str.m_charCode) {}
 
-	//代入演算子
+	/**
+	 * @brief コピー代入演算子のオーバーロード
+	 * 
+	 * @param [in] str コピー元の文字列ポインタ
+	 * @return WString& コピー先のWStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
 	WString& WString::operator=(const wchar_t* str)
 	{
 		std::wstring::operator=(str);
 		this->m_charCode = CharCode::UTF16BE;
 		return *this;
 	}
+	/**
+	 * @brief コピー代入演算子のオーバーロード
+	 * 
+	 * @param [in] str コピー元のWStringインスタンス
+	 * @return WString& コピー先のWStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
 	WString& WString::operator=(const WString& str)
 	{
 		std::wstring::operator=(str);
@@ -350,13 +543,31 @@ namespace my {
 		return *this;
 	}
 
-	//文字コード設定
+	/**
+	 * @brief 文字コードを設定する
+	 * 
+	 * @param [in] code 文字コード
+	 * 
+	 * @par 詳細
+	 *      なし
+	 */
 	void WString::setCharCode(const CharCode code)
 	{
 		this->m_charCode = code;
 	}
 
-	//ログ出力
+	/**
+	 * @brief 正解データを入力して、結果を出力する
+	 * 
+	 * @return WString 正解文字列のWStringインスタンス
+	 * 
+	 * @par 詳細
+	 *      入力された正解文字列と比較して、一致するか判定します。
+	 *      一致していれば"[OK]"の文字列を出力します。
+	 *      不一致であれば"[NG]"の文字列を出力します。
+	 *      その後、結果に関わらず、自身の文字列を出力します。
+	 *      出力先は標準出力になります。
+	 */
 	void WString::result(const WString& current)
 	{
 		bool res = (*this == current) ? true : false;
@@ -371,5 +582,4 @@ namespace my {
 		out = out + "0x0000 (" + enumToString(this->m_charCode) + ")";
 		std::cout << out << std::endl;
 	}
-
 }
