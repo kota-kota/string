@@ -1,4 +1,14 @@
-﻿#include "String.hpp"
+﻿/**
+ * @file main.cpp
+ * @author kota-kota
+ * @brief 
+ * @version 0.1
+ * @date 2020-05-02
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+#include "String.hpp"
 #include <iostream>
 #include <cstdlib>
 
@@ -50,7 +60,10 @@ char test_sjis[] = {
 	0x8b, 0x9e,		//京
 	0x00 };
 
-
+/**
+ * @brief テスト1：UTF8の文字コード変換
+ * 
+ */
 void test1()
 {
 	std::cout << "Test1: UTF8" << std::endl;
@@ -69,6 +82,10 @@ void test1()
 	sjis.result(test_sjis);
 }
 
+/**
+ * @brief テスト2：SJISの文字コード変換
+ * 
+ */
 void test2()
 {
 	std::cout << "Test2: SJIS" << std::endl;
@@ -87,6 +104,10 @@ void test2()
 	utf16be.result(test_utf16be);
 }
 
+/**
+ * @brief テスト3：UTF16BEの文字コード変換
+ * 
+ */
 void test3()
 {
 	std::cout << "Test3: UTF16BE" << std::endl;
@@ -98,6 +119,11 @@ void test3()
 	std::cout << "* UTF16BE -> SJIS" << std::endl;
 }
 
+/**
+ * @brief メイン関数：文字列を扱うクラスのテスト実行
+ * 
+ * @return int 0
+ */
 int main()
 {
 	test1(); std::cout << std::endl;
