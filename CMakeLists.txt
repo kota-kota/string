@@ -42,8 +42,13 @@ message(STATUS "* GNUCC: ${CMAKE_COMPILER_IS_GNUCC}")
 message(STATUS "* GNUCXX: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 #コンパイラチェック
-if(NOT MSVC)
-	message(FATAL_ERROR "Compiler is NOT MSVC")
+if(NOT (MSVC OR CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX))
+	message(FATAL_ERROR "Compiler is NOT MSVC or GNUCC or GNUCXX")
+endif()
+
+#ビルドタイプ(Debug or Release)
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+	set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 #コンパイルオプションの設定
@@ -51,10 +56,16 @@ enable_language(CXX)
 set(CMAKE_CXX_STANDARD 11) #C++11を選択する(コンパイルオプションに-std=c++11が付与される)
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #CMAKE_CXX_STANDARDを有効にする
 set(CMAKE_CXX_EXTENSIONS OFF) #GNU拡張機能を使用しない
-if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-	string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+if(MSVC)
+	if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+		string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	else()
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+	endif()
 else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wcast-align -Wcast-qual -Wconversion -Wctor-dtor-privacy -Wdelete-non-virtual-dtor -Wdisabled-optimization -Weffc++ -Wendif-labels -Wfloat-equal -Winit-self -Winline -Wjump-misses-init -Wlogical-op -Wmissing-include-dirs -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wpacked -Wpointer-arith -Wredundant-decls -Wreorder -Wshadow -Wsign-promo -Wswitch-default -Wswitch-enum -Wunsafe-loop-optimizations -Wvariadic-macros -Wwrite-strings -Wzero-as-null-pointer-constant ")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -O0") #ビルドタイプがDebugの場合のみ
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG") #ビルドタイプがReleaseの場合のみ
 endif()
 
 #VisualStudioの設定

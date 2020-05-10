@@ -85,7 +85,7 @@ namespace {
 	 */
 	const char* enumToString(const my::String::CharCode code)
 	{
-		char* ret = "NONE";
+		const char* ret = "NONE";
 		switch(code) {
 			case my::String::CharCode::UTF8:	ret = "UTF8";		break;
 			case my::String::CharCode::SJIS:	ret = "SJIS";		break;
@@ -106,7 +106,7 @@ namespace {
 	 */
 	const char* enumToString(const my::WString::CharCode code)
 	{
-		char* ret = "NONE";
+		const char* ret = "NONE";
 		switch (code) {
 		case my::WString::CharCode::UTF16BE:	ret = "UTF16BE";	break;
 		default:	break;
@@ -232,7 +232,7 @@ namespace {
 		my::WString utf16be;
 
 		//変換
-		std::int32_t readSize = 0;
+		std::size_t readSize = 0;
 		while (readSize < sjis.size()) {
 			std::uint16_t s = 0x0000;
 
@@ -243,7 +243,7 @@ namespace {
 
 				//SJIS2バイト目を取得してSJIS全角文字コードに変換
 				const std::uint8_t s2 = static_cast<std::uint8_t>(sjis[readSize + 1]);
-				s = (static_cast<std::uint16_t>(s1) << 8) | static_cast<std::uint16_t>(s2);
+				s = static_cast<std::uint16_t>((s1 << 8) | s2);
 
 				readSize += 2;
 			}
@@ -288,14 +288,14 @@ namespace {
 		my::WString utf16be = convert_SJIS_to_UTF16BE(sjis);
 
 		//UTF16BE->UTF8変換
-		for (std::int32_t i = 0; i < utf16be.size(); i++) {
+		for (std::size_t i = 0; i < utf16be.size(); i++) {
 			const std::uint16_t u = static_cast<std::uint16_t>(utf16be[i]);
 
 			//1バイト毎に分割
 			const std::uint8_t u1 = static_cast<std::uint8_t>((u & 0xFF00) >> 8);
 			const std::uint8_t u2 = static_cast<std::uint8_t>(u & 0x00FF);
 
-			const std::uint16_t c = (u1 * 0x100) + u2;
+			const std::uint16_t c = static_cast<std::uint16_t>((u1 * 0x100) + u2);
 			if (c <= 0x007F) {
 				//0x0000-0x007F
 				utf8.push_back(static_cast<char>(c));
@@ -411,6 +411,7 @@ namespace my {
 	{
 		String ret;
 		switch (this->m_charCode) {
+		case CharCode::UTF8:	break;
 		case CharCode::SJIS:	ret = convert_SJIS_to_UTF8(*this);		break;
 		default:	break;
 		};
@@ -449,6 +450,7 @@ namespace my {
 		String ret;
 		switch (this->m_charCode) {
 		case CharCode::UTF8:	ret = convert_UTF8_to_SJIS(*this);			break;
+		case CharCode::SJIS:	break;
 		default:	break;
 		};
 		return ret;
@@ -471,7 +473,7 @@ namespace my {
 		bool res = (*this == current) ? true : false;
 		std::string out;
 		out = res ? "[OK] " : "[NG] ";
-		for (std::int32_t i = 0; i < this->size(); i++) {
+		for (std::size_t i = 0; i < this->size(); i++) {
 			std::uint8_t t = static_cast<std::uint8_t>(this->c_str()[i]);
 			std::stringstream ss;
 			ss << std::hex << static_cast<std::int32_t>(t);
@@ -573,7 +575,7 @@ namespace my {
 		bool res = (*this == current) ? true : false;
 		std::string out;
 		out = res ? "[OK] " : "[NG] ";
-		for (std::int32_t i = 0; i < this->size(); i++) {
+		for (std::size_t i = 0; i < this->size(); i++) {
 			std::uint16_t t = static_cast<std::uint16_t>(this->c_str()[i]);
 			std::stringstream ss;
 			ss << std::hex << static_cast<std::int32_t>(t);
