@@ -124,11 +124,13 @@ void test3()
  * 
  * @return int 0
  */
-int main()
+std::int32_t main()
 {
 	test1(); std::cout << std::endl;
 	test2(); std::cout << std::endl;
 	test3(); std::cout << std::endl;
+#if defined(WIN32)
 	system("pause");
+#endif //defined(WIN32)
 	return 0;
 }

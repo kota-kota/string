@@ -63,7 +63,7 @@ if(MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 	endif()
 else()
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wcast-align -Wcast-qual -Wconversion -Wctor-dtor-privacy -Wdelete-non-virtual-dtor -Wdisabled-optimization -Weffc++ -Wendif-labels -Wfloat-equal -Winit-self -Winline -Wjump-misses-init -Wlogical-op -Wmissing-include-dirs -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wpacked -Wpointer-arith -Wredundant-decls -Wreorder -Wshadow -Wsign-promo -Wswitch-default -Wswitch-enum -Wunsafe-loop-optimizations -Wvariadic-macros -Wwrite-strings -Wzero-as-null-pointer-constant ")
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wcast-align -Wcast-qual -Wconversion -Wctor-dtor-privacy -Wdelete-non-virtual-dtor -Wdisabled-optimization -Weffc++ -Wendif-labels -Wfloat-equal -Winit-self -Winline -Wlogical-op -Wmissing-include-dirs -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wpacked -Wpointer-arith -Wredundant-decls -Wreorder -Wshadow -Wsign-promo -Wswitch-default -Wswitch-enum -Wunsafe-loop-optimizations -Wvariadic-macros -Wwrite-strings -Wzero-as-null-pointer-constant ")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -O0") #ビルドタイプがDebugの場合のみ
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG") #ビルドタイプがReleaseの場合のみ
 endif()
